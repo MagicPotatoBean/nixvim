@@ -1,5 +1,5 @@
 {
-  description = "A very basic flake";
+  description = "A nixvim configuration";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs";
@@ -8,20 +8,23 @@
       url = "github:nix-community/fenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    flake-parts.url = "github:hercules-ci/flake-parts";
   };
 
   outputs = {
     self,
     nixpkgs,
     nixvim,
-    fenix,
     flake-parts,
-  } @ inputs: flake-parts.lib.mkFlake {inherit inputs;} {
+    fenix,
+    ...
+  } @ inputs:
+    flake-parts.lib.mkFlake {inherit inputs;} {
       systems = [
-        "aarch64-darwin"
+        "x86_64-linux"
         "aarch64-linux"
         "x86_64-darwin"
-        "x86_64-linux"
+        "aarch64-darwin"
       ];
 
       perSystem = {
@@ -591,7 +594,7 @@
             workspaces = [
               {
                 name = "Documents";
-                path = "~/Documents/nyan_vault";
+                path = "~/Documents/";
               }
             ];
             mappings = {
@@ -751,12 +754,32 @@
         };
       };
     };
-        nixvim' = nixvim.legacyPackages."${system}";
-        nvim = nixvim'.makeNixvim config;
+        nixvimLib = nixvim.lib.${system};
+        nvim = nixvim.legacyPackages.${system}.makeNixvimWithModule {
+          inherit pkgs;
+          module = config;
+        };
       in {
+        checks = {
+          default = nixvimLib.check.mkTestDerivationFromNvim {
+            inherit nvim;
+            name = "A nixvim configuration";
+          };
+        };
+
         packages = {
-          inherit nvim;
           default = nvim;
+        };
+
+        devShells.default = pkgs.mkShellNoCC {
+          shellHook = ''
+            echo Welcome to a Neovim dev environment powered by Nixvim -- https://github.com/nix-community/nixvim
+            PS1="Nixvim: \\w \$ "
+            alias vim='nvim'
+          '';
+          packages = with pkgs; [
+            nvim
+          ];
         };
       };
     };
