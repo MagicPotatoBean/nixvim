@@ -361,7 +361,10 @@
     config = {
       viAlias = true;
       vimAlias = true;
-      extraConfigVim = "set noshowmode";
+            extraConfigVim = ''
+            set noshowmode
+            set listchars=tab:→\ ,space:·,nbsp:␣,trail:•,eol:¶,precedes:«,extends:»
+            '';
       clipboard = {
         register = "unnamedplus";
         providers.wl-copy = {
@@ -378,7 +381,23 @@
         signcolumn = "yes";
       };
       globals.mapleader = " ";
-      keymaps = [
+            keymaps = [
+        {
+          key = "<leader>ie";
+          action = ":set list<CR>";
+          options = {
+            silent = true;
+            desc = "Enable printing invisible chars";
+          };
+        }
+        {
+          key = "<leader>id";
+          action = ":set nolist<CR>";
+          options = {
+            silent = true;
+            desc = "Disable printing invisible chars";
+          };
+        }
         {
           key = "<leader>bc";
           action = ":BufferLinePick<CR>";
@@ -774,8 +793,9 @@
         devShells.default = pkgs.mkShellNoCC {
           shellHook = ''
             echo Welcome to a Neovim dev environment powered by Nixvim -- https://github.com/nix-community/nixvim
-            PS1="Nixvim: \\w \$ "
+            PS1="[Nixvim @ \\w]: "
             alias vim='nvim'
+            alias vi='nvim'
           '';
           packages = with pkgs; [
             nvim
